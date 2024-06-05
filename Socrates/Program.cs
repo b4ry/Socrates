@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Socrates.Constants;
 using Socrates.Hubs;
 using System.Text;
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,11 +31,17 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            var accessToken = context.Request.Query["accessToken"];
+            context.Request.Headers.TryGetValue("Authorization", out StringValues accessToken);
 
             if (!string.IsNullOrEmpty(accessToken))
-            {
-                context.Token = accessToken;
+            { 
+                var token = Regex.Match(accessToken.First()!,
+                    builder.Configuration.GetSection(ConfigurationPropertyNames.RegexBearerTokenPattern).Get<string>()!).Value;
+
+                if (!string.IsNullOrEmpty(token))
+                {
+                    context.Token = token;
+                }
             }
 
             return Task.CompletedTask;
