@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Socrates.Constants;
 
 namespace Socrates.Hubs
 {
@@ -14,7 +15,7 @@ namespace Socrates.Hubs
 
             if (userName != null)
             {
-                await Clients.All.ReceiveMessage("Server", $"{userName} joined the chat!");
+                await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} joined the chat!");
             }
             else
             {
@@ -33,7 +34,7 @@ namespace Socrates.Hubs
 
             if (userName != null)
             {
-                await Clients.All.ReceiveMessage(string.Empty, $"{userName} left the chat!");
+                await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} left the chat!");
             }
             else
             {
@@ -41,9 +42,11 @@ namespace Socrates.Hubs
             }
         }
 
-        public async Task SendMessageToCaller(string user, string message)
+        public async Task SendMessage(string user, string message)
         {
-            await Clients.Caller.ReceiveMessage(user, message);
+            var sourceUserName = Context?.User?.Identity?.Name ?? MessageSourceNames.Unknown;
+
+            await Clients.User(user).ReceiveMessage(sourceUserName, message);
         }
     }
 }
