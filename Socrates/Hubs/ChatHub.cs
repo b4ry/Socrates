@@ -14,7 +14,7 @@ namespace Socrates.Hubs
 
             if (userName != null)
             {
-                await Clients.All.ReceiveMessage(string.Empty, $"{userName} joined the chat!");
+                await Clients.All.ReceiveMessage("Server", $"{userName} joined the chat!");
             }
             else
             {

@@ -3,6 +3,7 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Socrates.Constants;
 using Socrates.Hubs;
+using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -24,7 +25,8 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
         ValidIssuer = jwtIssuer,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey!)),
+        NameClaimType = ClaimTypes.NameIdentifier // to ensure User.Identity.Name is not null
     };
 
     options.Events = new JwtBearerEvents
