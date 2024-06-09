@@ -8,6 +8,7 @@ namespace Socrates.Hubs
     public class ChatHub(ILogger<ChatHub> logger) : Hub<IChatHub>
     {
         private readonly ILogger<ChatHub> _logger = logger;
+        private readonly IDictionary<string, string> _userConnectionIds = new Dictionary<string, string>(); 
 
         public override async Task OnConnectedAsync()
         {
@@ -15,7 +16,9 @@ namespace Socrates.Hubs
 
             if (userName != null)
             {
+                _userConnectionIds.Add(userName, Context.ConnectionId);
                 await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} joined the chat!");
+                await Clients.AllExcept(_userConnectionIds[userName]).NewUserJoinedChat(userName);
             }
             else
             {
