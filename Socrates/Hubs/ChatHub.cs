@@ -49,7 +49,14 @@ namespace Socrates.Hubs
         {
             var sourceUserName = Context?.User?.Identity?.Name ?? MessageSourceNames.Unknown;
 
-            await Clients.User(user).ReceiveMessage(sourceUserName, message);
+            if (user == "Server")
+            {
+                await Clients.Others.ReceiveMessage(MessageSourceNames.Server, $"{sourceUserName}: {message}");
+            }
+            else
+            {
+                await Clients.User(user).ReceiveMessage(sourceUserName, message);
+            }
         }
     }
 }
