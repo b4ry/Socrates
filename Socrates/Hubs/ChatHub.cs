@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Socrates.Constants;
+using StackExchange.Redis;
 
 namespace Socrates.Hubs
 {
     [Authorize]
-    public class ChatHub(ILogger<ChatHub> logger) : Hub<IChatHub>
+    public class ChatHub(ILogger<ChatHub> logger, IConnectionMultiplexer redis) : Hub<IChatHub>
     {
-        private readonly ILogger<ChatHub> _logger = logger;
-        private readonly IDictionary<string, string> _userConnectionIds = new Dictionary<string, string>(); 
+        private const string _connectedUsersRedisKey = "connectedUsers";
 
         public override async Task OnConnectedAsync()
         {
@@ -16,9 +16,15 @@ namespace Socrates.Hubs
 
             if (userName != null)
             {
-                _userConnectionIds.Add(userName, Context.ConnectionId);
+                var db = redis.GetDatabase();
+
+                var users = (await db.HashGetAllAsync(_connectedUsersRedisKey)).Select(x => x.Value.ToString());
+                await Clients.Caller.GetUsers(users);
+
                 await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} joined the chat!");
-                await Clients.AllExcept(_userConnectionIds[userName]).NewUserJoinedChat(userName);
+                await Clients.AllExcept(Context.ConnectionId).NewUserJoinedChat(userName);
+
+                await db.HashSetAsync(_connectedUsersRedisKey, Context.ConnectionId, userName);
             }
             else
             {
@@ -30,7 +36,7 @@ namespace Socrates.Hubs
         {
             if(exception != null)
             {
-                _logger.LogError(exception.ToString());
+                logger.LogError(exception.ToString());
             }
 
             var userName = Context.User?.Identity?.Name;
@@ -38,6 +44,11 @@ namespace Socrates.Hubs
             if (userName != null)
             {
                 await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} left the chat!");
+
+                var db = redis.GetDatabase();
+                await db.HashDeleteAsync(_connectedUsersRedisKey, Context.ConnectionId);
+
+                await Clients.Others.UserLoggedOut(userName);
             }
             else
             {
@@ -49,7 +60,7 @@ namespace Socrates.Hubs
         {
             var sourceUserName = Context?.User?.Identity?.Name ?? MessageSourceNames.Unknown;
 
-            if (user == "Server")
+            if (user == MessageSourceNames.Server)
             {
                 await Clients.Others.ReceiveMessage(MessageSourceNames.Server, $"{sourceUserName}: {message}");
             }

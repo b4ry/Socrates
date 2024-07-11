@@ -84,6 +84,8 @@ builder.Services.AddSignalR().AddStackExchangeRedis("127.0.0.1:6379", o =>
     };
 });
 
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
+
 var app = builder.Build();
 
 app.UseRouting();
