@@ -53,36 +53,38 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddSignalR().AddStackExchangeRedis("127.0.0.1:6379", o =>
-{
-    o.ConnectionFactory = async writer =>
+builder.Services.AddSignalR()
+    .AddMessagePackProtocol()
+    .AddStackExchangeRedis("127.0.0.1:6379", o =>
     {
-        var config = new ConfigurationOptions
+        o.ConnectionFactory = async writer =>
         {
-            AbortOnConnectFail = false
+            var config = new ConfigurationOptions
+            {
+                AbortOnConnectFail = false
+            };
+            config.EndPoints.Add(IPAddress.Loopback, 0);
+            config.SetDefaultPorts();
+    
+            var connection = await ConnectionMultiplexer.ConnectAsync(config, writer);
+    
+            connection.ConnectionFailed += (_, e) =>
+            {
+                Console.WriteLine("Connection to Redis failed.");
+            };
+    
+            if (!connection.IsConnected)
+            {
+                Console.WriteLine("Did not connect to Redis.");
+            }
+            else
+            {
+                Console.Write($"Successfully connected to Redis: {connection.Configuration} as {connection.ClientName}.");
+            }
+    
+            return connection;
         };
-        config.EndPoints.Add(IPAddress.Loopback, 0);
-        config.SetDefaultPorts();
-
-        var connection = await ConnectionMultiplexer.ConnectAsync(config, writer);
-
-        connection.ConnectionFailed += (_, e) =>
-        {
-            Console.WriteLine("Connection to Redis failed.");
-        };
-
-        if (!connection.IsConnected)
-        {
-            Console.WriteLine("Did not connect to Redis.");
-        }
-        else
-        {
-            Console.Write($"Successfully connected to Redis: {connection.Configuration} as {connection.ClientName}.");
-        }
-
-        return connection;
-    };
-});
+    });
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
 

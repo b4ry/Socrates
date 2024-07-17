@@ -18,8 +18,12 @@ namespace Socrates.Hubs
             {
                 var db = redis.GetDatabase();
 
-                var users = (await db.HashGetAllAsync(_connectedUsersRedisKey)).Select(x => x.Value.ToString());
-                await Clients.Caller.GetUsers(users);
+                var users = (await db.HashGetAllAsync(_connectedUsersRedisKey)).Select(x => x.Value.ToString()).ToList();
+
+                if (users.Count > 0)
+                {
+                    await Clients.Caller.GetUsers(users);
+                }
 
                 await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} joined the chat!");
                 await Clients.AllExcept(Context.ConnectionId).NewUserJoinedChat(userName);
