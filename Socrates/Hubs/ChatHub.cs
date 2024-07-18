@@ -26,7 +26,7 @@ namespace Socrates.Hubs
                 }
 
                 await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} joined the chat!");
-                await Clients.AllExcept(Context.ConnectionId).NewUserJoinedChat(userName);
+                await Clients.AllExcept(Context.ConnectionId).UserJoinsChat(userName);
 
                 await db.HashSetAsync(_connectedUsersRedisKey, Context.ConnectionId, userName);
             }
@@ -52,7 +52,7 @@ namespace Socrates.Hubs
                 var db = redis.GetDatabase();
                 await db.HashDeleteAsync(_connectedUsersRedisKey, Context.ConnectionId);
 
-                await Clients.Others.UserLoggedOut(userName);
+                await Clients.Others.UserLogsOut(userName);
             }
             else
             {

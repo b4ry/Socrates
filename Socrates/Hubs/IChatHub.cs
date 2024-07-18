@@ -3,8 +3,8 @@
     public interface IChatHub
     {
         public Task ReceiveMessage(string user, string message);
-        public Task NewUserJoinedChat(string user);
-        public Task UserLoggedOut(string user);
+        public Task UserJoinsChat(string user);
+        public Task UserLogsOut(string user);
         public Task GetUsers(IEnumerable<string> users);
     }
 }
