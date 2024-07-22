@@ -8,12 +8,9 @@ namespace Socrates.Encryption
 
         public static string PublicKey { get => _rsa.ToXmlString(false); }
 
-        public static string Decrypt(byte[] encryptedTextBytes)
+        public static byte[] Decrypt(byte[] encryptedTextBytes)
         {
-            var decryptedTextBytes = _rsa.Decrypt(encryptedTextBytes, RSAEncryptionPadding.Pkcs1);
-            var decryptedText = BitConverter.ToString(decryptedTextBytes);
-
-            return decryptedText;
+            return _rsa.Decrypt(encryptedTextBytes, RSAEncryptionPadding.Pkcs1);
         }
     }
 }
