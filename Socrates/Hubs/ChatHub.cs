@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Socrates.Constants;
+using Socrates.Encryption;
 using StackExchange.Redis;
 
 namespace Socrates.Hubs
@@ -26,13 +27,15 @@ namespace Socrates.Hubs
                 }
 
                 await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} joined the chat!");
+                await Clients.Caller.GetAsymmetricPublicKey(RSAEncryption.GetPublicKey());
                 await Clients.AllExcept(Context.ConnectionId).UserJoinsChat(userName);
 
                 await db.HashSetAsync(_connectedUsersRedisKey, Context.ConnectionId, userName);
             }
             else
             {
-                await base.OnConnectedAsync();
+                logger.LogError("User without an identity name!");
+                // TODO: logs it out
             }
         }
 
@@ -47,7 +50,7 @@ namespace Socrates.Hubs
 
             if (userName != null)
             {
-                await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} left the chat!");
+                await Clients.Others.ReceiveMessage(MessageSourceNames.Server, $"{userName} left the chat!");
 
                 var db = redis.GetDatabase();
                 await db.HashDeleteAsync(_connectedUsersRedisKey, Context.ConnectionId);
@@ -72,6 +75,12 @@ namespace Socrates.Hubs
             {
                 await Clients.User(user).ReceiveMessage(sourceUserName, message);
             }
+        }
+
+        public void SendSymmetricKey((byte[] encryptedSymmetricKey, byte[] encryptedSymmetricIV) encryptedSymmetricKeyInfo)
+        {
+            var decryptedSymmetricKey = RSAEncryption.Decrypt(encryptedSymmetricKeyInfo.encryptedSymmetricKey);
+            var decryptedSymmetricIV = RSAEncryption.Decrypt(encryptedSymmetricKeyInfo.encryptedSymmetricIV);
         }
     }
 }

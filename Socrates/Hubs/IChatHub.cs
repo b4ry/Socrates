@@ -6,5 +6,6 @@
         public Task UserJoinsChat(string user);
         public Task UserLogsOut(string user);
         public Task GetUsers(IEnumerable<string> users);
+        public Task GetAsymmetricPublicKey(string publicKey);
     }
 }
