@@ -27,7 +27,7 @@ namespace Socrates.Hubs
                 }
 
                 await Clients.All.ReceiveMessage(MessageSourceNames.Server, $"{userName} joined the chat!");
-                await Clients.Caller.GetAsymmetricPublicKey(RSAEncryption.GetPublicKey());
+                await Clients.Caller.GetAsymmetricPublicKey(RSAEncryption.PublicKey);
                 await Clients.AllExcept(Context.ConnectionId).UserJoinsChat(userName);
 
                 await db.HashSetAsync(_connectedUsersRedisKey, Context.ConnectionId, userName);
