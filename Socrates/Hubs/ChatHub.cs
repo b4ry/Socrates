@@ -24,9 +24,9 @@ namespace Socrates.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            var userName = Context.User?.Identity?.Name;
+            var username = Context.User?.Identity?.Name;
 
-            if (userName != null)
+            if (username != null)
             {
                 var users = await _redisDb.HashGetAllAsync(Redis.ConnectedUsersKey);
 
@@ -36,32 +36,16 @@ namespace Socrates.Hubs
 
                     foreach (var user in users)
                     {
-                        byte[] textBytes = Encoding.UTF8.GetBytes($"{userName} joined the chat!");
-
-                        var decryptedSymmetricKey = RSAEncryption.Decrypt((await _redisDb.HashGetAsync(Redis.UserPublicKeysKey, user.Name))!);
-                        var decryptedSymmetricIV = RSAEncryption.Decrypt((await _redisDb.HashGetAsync(Redis.UserPublicIVsKey, user.Name))!);
-
-                        _aes.Key = decryptedSymmetricKey;
-                        _aes.IV = decryptedSymmetricIV;
-
-                        var aesEncryptor = _aes.CreateEncryptor();
-
-                        using MemoryStream ms = new();
-                        using (CryptoStream cs = new(ms, aesEncryptor, CryptoStreamMode.Write))
-                        {
-                            await cs.WriteAsync(textBytes);
-                        }
-
-                        var encryptedMessage = Convert.ToBase64String(ms.ToArray());
+                        var encryptedMessage = await EncryptMessage($"{username} joined the chat!", user.Name!);
 
                         await Clients.Client(user.Value!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
                     }
 
-                    await Clients.Others.UserJoinsChat(userName);
+                    await Clients.Others.UserJoinsChat(username);
                 }
 
                 await Clients.Caller.GetAsymmetricPublicKey(RSAEncryption.PublicKey);
-                await _redisDb.HashSetAsync(Redis.ConnectedUsersKey, userName, Context.ConnectionId);
+                await _redisDb.HashSetAsync(Redis.ConnectedUsersKey, username, Context.ConnectionId);
             }
             else
             {
@@ -77,31 +61,59 @@ namespace Socrates.Hubs
                 _logger.LogError(exception.ToString());
             }
 
-            var userName = Context.User?.Identity?.Name;
+            var disconnectingUsername = Context.User?.Identity?.Name;
 
-            if (userName != null)
+            if (disconnectingUsername != null)
             {
-                await Clients.Others.ReceiveMessage(MessageSourceNames.Server, $"{userName} left the chat!");
-                await _redisDb.HashDeleteAsync(Redis.ConnectedUsersKey, userName);
-                await Clients.Others.UserLogsOut(userName);
+                var usernames = (await _redisDb.HashGetAllAsync(Redis.ConnectedUsersKey))
+                    .Where(x => x.Name != disconnectingUsername)
+                    .Select(x => x.Name)
+                    .ToList();
+
+                foreach (var username in usernames)
+                {
+                    var encryptedMessage = await EncryptMessage($"{disconnectingUsername} left the chat!", username!);
+
+                    await Clients.User(username!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
+                }
+
+                await _redisDb.HashDeleteAsync(Redis.ConnectedUsersKey, disconnectingUsername);
+                await _redisDb.HashDeleteAsync(Redis.UserPublicIVsKey, disconnectingUsername);
+                await _redisDb.HashDeleteAsync(Redis.UserPublicKeysKey, disconnectingUsername);
+
+                await Clients.Others.UserLogsOut(disconnectingUsername);
             }
             else
             {
-                await base.OnDisconnectedAsync(exception);
+                _logger.LogError("User without an identity name!");
+                // TODO: logs it out
             }
         }
 
         public async Task SendMessage(string user, string message)
         {
-            var sourceUserName = Context?.User?.Identity?.Name ?? MessageSourceNames.Unknown;
+            var sourceUsername = Context?.User?.Identity?.Name ?? MessageSourceNames.Unknown;
+            var newMessage = $"{sourceUsername}: {message}";
 
             if (user == MessageSourceNames.Server)
             {
-                await Clients.Others.ReceiveMessage(MessageSourceNames.Server, $"{sourceUserName}: {message}");
+                var usernames = (await _redisDb.HashGetAllAsync(Redis.ConnectedUsersKey))
+                    .Where(x => x.Name != sourceUsername)
+                    .Select(x => x.Name)
+                    .ToList();
+
+                foreach (var username in usernames)
+                {
+                    var encryptedMessage = await EncryptMessage(newMessage, username!);
+
+                    await Clients.User(username!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
+                }
             }
             else
             {
-                await Clients.User(user).ReceiveMessage(sourceUserName, message);
+                var encryptedMessage = await EncryptMessage(newMessage, user);
+
+                await Clients.User(user).ReceiveMessage(sourceUsername, encryptedMessage);
             }
         }
 
@@ -114,6 +126,27 @@ namespace Socrates.Hubs
                 await _redisDb.HashSetAsync(Redis.UserPublicKeysKey, userName, encryptedSymmetricKeyInfo.encryptedSymmetricKey);
                 await _redisDb.HashSetAsync(Redis.UserPublicIVsKey, userName, encryptedSymmetricKeyInfo.encryptedSymmetricIV);
             }
+        }
+
+        private async Task<string> EncryptMessage(string message, string user)
+        {
+            byte[] textBytes = Encoding.UTF8.GetBytes(message);
+
+            var decryptedSymmetricKey = RSAEncryption.Decrypt((await _redisDb.HashGetAsync(Redis.UserPublicKeysKey, user))!);
+            var decryptedSymmetricIV = RSAEncryption.Decrypt((await _redisDb.HashGetAsync(Redis.UserPublicIVsKey, user))!);
+
+            _aes.Key = decryptedSymmetricKey;
+            _aes.IV = decryptedSymmetricIV;
+
+            var aesEncryptor = _aes.CreateEncryptor();
+
+            using MemoryStream ms = new();
+            using (CryptoStream cs = new(ms, aesEncryptor, CryptoStreamMode.Write))
+            {
+                await cs.WriteAsync(textBytes);
+            }
+
+            return Convert.ToBase64String(ms.ToArray());
         }
     }
 }
