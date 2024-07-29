@@ -5,7 +5,9 @@ VisualStudioVersion = 17.10.34928.147
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Socrates", "Socrates\Socrates.csproj", "{CD24EF92-020B-4118-891E-08C1AEB8D9FB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Socrates.Encryption", "Socrates.Encryption\Socrates.Encryption.csproj", "{9E647740-1BD4-474B-A08E-886EB89B004B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Socrates.Encryption", "Socrates.Encryption\Socrates.Encryption.csproj", "{9E647740-1BD4-474B-A08E-886EB89B004B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Socrates.Tests", "Socrates.Tests\Socrates.Tests.csproj", "{CDDA98E6-9AEB-42AD-9E25-8A957714D333}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{9E647740-1BD4-474B-A08E-886EB89B004B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9E647740-1BD4-474B-A08E-886EB89B004B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9E647740-1BD4-474B-A08E-886EB89B004B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CDDA98E6-9AEB-42AD-9E25-8A957714D333}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CDDA98E6-9AEB-42AD-9E25-8A957714D333}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CDDA98E6-9AEB-42AD-9E25-8A957714D333}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CDDA98E6-9AEB-42AD-9E25-8A957714D333}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
