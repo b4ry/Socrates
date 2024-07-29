@@ -26,7 +26,7 @@ namespace Socrates.Tests
             var username = "testUsername";
             Mock<IDatabase> mockRedisDb = MockRedisDatabase([]);
             Mock<HubCallerContext> mockContext = MockContext(username);
-            Mock<IHubCallerClients<IChatHub>> mockClients = MockHubCallerClients();
+            MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out Mock<IChatHub> mockCaller);
 
             var hub = new ChatHub(_logger.Object, _redis.Object)
             {
@@ -46,6 +46,36 @@ namespace Socrates.Tests
                     It.IsAny<CommandFlags>()
                 ), Times.Once);
         }
+
+        [Fact]
+        public async void OnConnectedAsync_ShouldSendRSAPublicKeyToTheCaller_WhenContextHasCorrectIdentityWithUsername()
+        {
+            // Arrange
+            var username = "testUsername";
+            Mock<IDatabase> mockRedisDb = MockRedisDatabase([]);
+            Mock<HubCallerContext> mockContext = MockContext(username);
+            MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out Mock<IChatHub> mockCaller);
+
+            var hub = new ChatHub(_logger.Object, _redis.Object)
+            {
+                Context = mockContext.Object,
+                Clients = mockClients.Object
+            };
+
+            // Act
+            await hub.OnConnectedAsync();
+
+            // Assert
+            mockCaller.Verify(client => client.GetAsymmetricPublicKey(It.IsAny<string>()), Times.Once);
+        }
+
+        private static void MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out Mock<IChatHub> mockClientProxy)
+        {
+            mockClients = new Mock<IHubCallerClients<IChatHub>>();
+            mockClientProxy = new();
+            mockClients.Setup(clients => clients.Caller).Returns(mockClientProxy.Object);
+        }
+
         private Mock<IDatabase> MockRedisDatabase(HashEntry[] dbRecords)
         {
             var mockDatabase = new Mock<IDatabase>();
@@ -60,8 +90,6 @@ namespace Socrates.Tests
         private static Mock<IHubCallerClients<IChatHub>> MockHubCallerClients()
         {
             var mockClients = new Mock<IHubCallerClients<IChatHub>>();
-            var mockClientProxy = new Mock<IChatHub>();
-            mockClients.Setup(clients => clients.Caller).Returns(mockClientProxy.Object);
 
             return mockClients;
         }
