@@ -24,7 +24,7 @@ namespace Socrates.Hubs
 
         public override async Task OnConnectedAsync()
         {
-            var username = Context.User?.Identity?.Name;
+            var username = Context?.User?.Identity?.Name;
 
             if (username != null)
             {
@@ -45,7 +45,7 @@ namespace Socrates.Hubs
                 }
 
                 await Clients.Caller.GetAsymmetricPublicKey(RSAEncryption.PublicKey);
-                await _redisDb.HashSetAsync(Redis.ConnectedUsersKey, username, Context.ConnectionId);
+                await _redisDb.HashSetAsync(Redis.ConnectedUsersKey, username, Context!.ConnectionId);
             }
             else
             {
