@@ -89,7 +89,7 @@ builder.Services.AddSignalR()
     });
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
-builder.Services.AddScoped<IRSAEncryption, RSAEncryption>();
+builder.Services.AddSingleton<IRSAEncryption, RSAEncryption>();
 builder.Services.AddScoped<IAESEncryption, AESEncryption>();
 
 var app = builder.Build();
