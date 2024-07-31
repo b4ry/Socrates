@@ -12,6 +12,7 @@ namespace Socrates.Tests
     {
         private readonly Mock<ILogger<ChatHub>> _logger;
         private readonly Mock<IConnectionMultiplexer> _redis;
+        private const string _username = "testUsername";
 
         public ChatHubTests()
         {
@@ -23,9 +24,8 @@ namespace Socrates.Tests
         public async void OnConnectedAsync_ShouldAddUserToConnectedUsersEntriesInRedisDatabase_WhenContextHasCorrectIdentityWithUsername()
         {
             // Arrange
-            var username = "testUsername";
             Mock<IDatabase> mockRedisDb = MockRedisDatabase([]);
-            Mock<HubCallerContext> mockContext = MockContext(username);
+            Mock<HubCallerContext> mockContext = MockContext(_username);
             MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out Mock<IChatHub> mockCaller);
 
             var hub = new ChatHub(_logger.Object, _redis.Object)
@@ -40,7 +40,7 @@ namespace Socrates.Tests
             // Assert
             mockRedisDb.Verify(db => db.HashSetAsync(
                     Redis.ConnectedUsersKey,
-                    username,
+                    _username,
                     It.IsAny<RedisValue>(),
                     It.IsAny<When>(),
                     It.IsAny<CommandFlags>()
@@ -51,9 +51,8 @@ namespace Socrates.Tests
         public async void OnConnectedAsync_ShouldSendRSAPublicKeyToTheCaller_WhenContextHasCorrectIdentityWithUsername()
         {
             // Arrange
-            var username = "testUsername";
             Mock<IDatabase> mockRedisDb = MockRedisDatabase([]);
-            Mock<HubCallerContext> mockContext = MockContext(username);
+            Mock<HubCallerContext> mockContext = MockContext(_username);
             MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out Mock<IChatHub> mockCaller);
 
             var hub = new ChatHub(_logger.Object, _redis.Object)
@@ -85,13 +84,6 @@ namespace Socrates.Tests
             _redis.Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(mockDatabase.Object);
 
             return mockDatabase;
-        }
-
-        private static Mock<IHubCallerClients<IChatHub>> MockHubCallerClients()
-        {
-            var mockClients = new Mock<IHubCallerClients<IChatHub>>();
-
-            return mockClients;
         }
 
         private static Mock<HubCallerContext> MockContext(string username)
