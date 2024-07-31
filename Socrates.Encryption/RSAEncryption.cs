@@ -1,14 +1,15 @@
 ﻿using System.Security.Cryptography;
+using Socrates.Encryption.Interfaces;
 
 namespace Socrates.Encryption
 {
-    public static class RSAEncryption
+    public class RSAEncryption : IRSAEncryption
     {
-        private static readonly RSA _rsa = RSA.Create();
+        private readonly RSA _rsa = RSA.Create();
 
-        public static string PublicKey { get => _rsa.ToXmlString(false); }
+        public string PublicKey { get => _rsa.ToXmlString(false); }
 
-        public static byte[] Decrypt(byte[] encryptedTextBytes)
+        public byte[] Decrypt(byte[] encryptedTextBytes)
         {
             return _rsa.Decrypt(encryptedTextBytes, RSAEncryptionPadding.Pkcs1);
         }

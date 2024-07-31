@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Socrates.Constants\Socrates.Constants.csproj" />
     <ProjectReference Include="..\Socrates.Encryption\Socrates.Encryption.csproj" />
   </ItemGroup>
 

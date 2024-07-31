@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Socrates.Constants;
-using Socrates.Encryption;
+using Socrates.Encryption.Interfaces;
 using StackExchange.Redis;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace Socrates.Hubs
 {
@@ -13,13 +11,15 @@ namespace Socrates.Hubs
     {
         private readonly ILogger<ChatHub> _logger;
         private readonly IDatabase _redisDb;
-        private readonly Aes _aes;
+        private readonly IRSAEncryption _rsa;
+        private readonly IAESEncryption _aes;
 
-        public ChatHub(ILogger<ChatHub> logger, IConnectionMultiplexer redis)
+        public ChatHub(ILogger<ChatHub> logger, IConnectionMultiplexer redis, IRSAEncryption rsa, IAESEncryption aes)
         {
             _redisDb = redis.GetDatabase();
             _logger = logger;
-            _aes = Aes.Create();
+            _rsa = rsa;
+            _aes = aes;
         }
 
         public override async Task OnConnectedAsync()
@@ -36,15 +36,13 @@ namespace Socrates.Hubs
 
                     foreach (var user in users)
                     {
-                        var encryptedMessage = await EncryptMessage($"{username} joined the chat!", user.Name!);
-
-                        await Clients.Client(user.Value!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
+                        await EncryptMessageWithUserKeyAndSendIt(username, user);
                     }
 
                     await Clients.Others.UserJoinsChat(username);
                 }
 
-                await Clients.Caller.GetAsymmetricPublicKey(RSAEncryption.PublicKey);
+                await Clients.Caller.GetAsymmetricPublicKey(_rsa.PublicKey);
                 await _redisDb.HashSetAsync(Redis.ConnectedUsersKey, username, Context!.ConnectionId);
             }
             else
@@ -72,7 +70,7 @@ namespace Socrates.Hubs
 
                 foreach (var username in usernames)
                 {
-                    var encryptedMessage = await EncryptMessage($"{disconnectingUsername} left the chat!", username!);
+                    var encryptedMessage = await _aes.EncryptMessage($"{disconnectingUsername} left the chat!", username!);
 
                     await Clients.User(username!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
                 }
@@ -104,14 +102,14 @@ namespace Socrates.Hubs
 
                 foreach (var username in usernames)
                 {
-                    var encryptedMessage = await EncryptMessage(newMessage, username!);
+                    var encryptedMessage = await _aes.EncryptMessage(newMessage, username!);
 
                     await Clients.User(username!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
                 }
             }
             else
             {
-                var encryptedMessage = await EncryptMessage(newMessage, user);
+                var encryptedMessage = await _aes.EncryptMessage(newMessage, user);
 
                 await Clients.User(user).ReceiveMessage(sourceUsername, encryptedMessage);
             }
@@ -128,25 +126,11 @@ namespace Socrates.Hubs
             }
         }
 
-        private async Task<string> EncryptMessage(string message, string user)
+        private async Task EncryptMessageWithUserKeyAndSendIt(string username, HashEntry user)
         {
-            byte[] textBytes = Encoding.UTF8.GetBytes(message);
+            var encryptedMessage = await _aes.EncryptMessage($"{username} joined the chat!", user.Name!);
 
-            var decryptedSymmetricKey = RSAEncryption.Decrypt((await _redisDb.HashGetAsync(Redis.UserPublicKeysKey, user))!);
-            var decryptedSymmetricIV = RSAEncryption.Decrypt((await _redisDb.HashGetAsync(Redis.UserPublicIVsKey, user))!);
-
-            _aes.Key = decryptedSymmetricKey;
-            _aes.IV = decryptedSymmetricIV;
-
-            var aesEncryptor = _aes.CreateEncryptor();
-
-            using MemoryStream ms = new();
-            using (CryptoStream cs = new(ms, aesEncryptor, CryptoStreamMode.Write))
-            {
-                await cs.WriteAsync(textBytes);
-            }
-
-            return Convert.ToBase64String(ms.ToArray());
+            await Clients.Client(user.Value!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
         }
     }
 }

@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using Socrates.Constants;
+using Socrates.Encryption;
+using Socrates.Encryption.Interfaces;
 using Socrates.Hubs;
 using StackExchange.Redis;
 using System.Net;
@@ -87,6 +89,8 @@ builder.Services.AddSignalR()
     });
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
+builder.Services.AddScoped<IRSAEncryption, RSAEncryption>();
+builder.Services.AddScoped<IAESEncryption, AESEncryption>();
 
 var app = builder.Build();
 

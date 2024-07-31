@@ -1,4 +1,5 @@
 using Socrates.Encryption;
+using Socrates.Encryption.Interfaces;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -7,6 +8,13 @@ namespace Socrates.Tests
 {
     public class RSAEncryptionTests
     {
+        private readonly IRSAEncryption _rsa;
+
+        public RSAEncryptionTests()
+        {
+            _rsa = new RSAEncryption();
+        }
+
         [Fact]
         public void PublicKey_ShouldReturnRSAPublicKeyInCorrectXmlFormat()
         {
@@ -15,7 +23,7 @@ namespace Socrates.Tests
             Regex regex = new(pattern, RegexOptions.IgnoreCase);
 
             // Act
-            bool isMatch = regex.IsMatch(RSAEncryption.PublicKey);
+            bool isMatch = regex.IsMatch(_rsa.PublicKey);
 
             // Assert
             Assert.True(isMatch);
@@ -26,12 +34,12 @@ namespace Socrates.Tests
         {
             // Arrange
             var rsa = RSA.Create();
-            rsa.FromXmlString(RSAEncryption.PublicKey);
+            rsa.FromXmlString(_rsa.PublicKey);
             var messageToEncrypt = "test";
             var encryptedMessage = rsa.Encrypt(Encoding.UTF8.GetBytes(messageToEncrypt), RSAEncryptionPadding.Pkcs1);
 
             // Act
-            var decryptedMessage = Encoding.UTF8.GetString(RSAEncryption.Decrypt(encryptedMessage));
+            var decryptedMessage = Encoding.UTF8.GetString(_rsa.Decrypt(encryptedMessage));
 
             // Assert
             Assert.Equal(messageToEncrypt, decryptedMessage);
