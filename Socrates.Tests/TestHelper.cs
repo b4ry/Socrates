@@ -6,7 +6,7 @@ using System.Security.Claims;
 
 namespace Socrates.Tests
 {
-    internal class TestHelper
+    internal static class TestHelper
     {
         public static void MockClients(
             out Mock<IHubCallerClients<IChatHub>> mockClients,
