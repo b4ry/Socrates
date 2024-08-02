@@ -5,6 +5,7 @@ using Socrates.Constants;
 using Socrates.Encryption;
 using Socrates.Encryption.Interfaces;
 using Socrates.Hubs;
+using Socrates.Services;
 using StackExchange.Redis;
 using System.Net;
 using System.Security.Claims;
@@ -90,6 +91,7 @@ builder.Services.AddSignalR()
 
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect("127.0.0.1:6379"));
 builder.Services.AddSingleton<IAssymmetricEncryption, RSAEncryption>();
+builder.Services.AddScoped<Socrates.Services.ILogger, LoggerAdapter<ChatHub>>();
 builder.Services.AddScoped<ISymmetricEncryption, AESEncryption>();
 
 var app = builder.Build();

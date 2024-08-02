@@ -9,12 +9,12 @@ namespace Socrates.Hubs
     [Authorize]
     public class ChatHub : Hub<IChatHub>
     {
-        private readonly ILogger<ChatHub> _logger;
+        private readonly Services.ILogger _logger;
         private readonly IDatabase _redisDb;
         private readonly IAssymmetricEncryption _rsa;
         private readonly ISymmetricEncryption _aes;
 
-        public ChatHub(ILogger<ChatHub> logger, IConnectionMultiplexer redis, IAssymmetricEncryption rsa, ISymmetricEncryption aes)
+        public ChatHub(Services.ILogger logger, IConnectionMultiplexer redis, IAssymmetricEncryption rsa, ISymmetricEncryption aes)
         {
             _redisDb = redis.GetDatabase();
             _logger = logger;
@@ -56,7 +56,9 @@ namespace Socrates.Hubs
         {
             if (exception != null)
             {
-                _logger.LogError(exception.ToString());
+                _logger.LogError(exception, "Exception occured!");
+
+                return;
             }
 
             var disconnectingUsername = Context.User?.Identity?.Name;

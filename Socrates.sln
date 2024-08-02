@@ -9,7 +9,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Socrates.Encryption", "Socr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Socrates.Tests", "Socrates.Tests\Socrates.Tests.csproj", "{CDDA98E6-9AEB-42AD-9E25-8A957714D333}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Socrates.Constants", "Socrates.Constants\Socrates.Constants.csproj", "{7D2A206F-87D4-4D18-B960-D739B0D20F8C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Socrates.Constants", "Socrates.Constants\Socrates.Constants.csproj", "{7D2A206F-87D4-4D18-B960-D739B0D20F8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Socrates.Services", "Socrates.Services\Socrates.Services.csproj", "{678CF589-841A-420C-85D0-F0F24E068A2C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{7D2A206F-87D4-4D18-B960-D739B0D20F8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D2A206F-87D4-4D18-B960-D739B0D20F8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D2A206F-87D4-4D18-B960-D739B0D20F8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{678CF589-841A-420C-85D0-F0F24E068A2C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{678CF589-841A-420C-85D0-F0F24E068A2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{678CF589-841A-420C-85D0-F0F24E068A2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{678CF589-841A-420C-85D0-F0F24E068A2C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

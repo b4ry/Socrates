@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Socrates.Constants;
 using Socrates.Encryption.Interfaces;
@@ -11,13 +10,7 @@ namespace Socrates.Tests
 {
     public class ChatHubTests
     {
-        private readonly Mock<ILogger<ChatHub>> _logger;
         private const string _username = "testUsername";
-
-        public ChatHubTests()
-        {
-            _logger = new Mock<ILogger<ChatHub>>();
-        }
 
         [Fact]
         public async void OnConnectedAsync_ShouldAddUserToConnectedUsersEntriesInRedisDatabase_WhenContextHasCorrectIdentityWithUsername()
@@ -31,6 +24,7 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockOthers,
                 out Mock<IAssymmetricEncryption> mockRsa,
                 out Mock<ISymmetricEncryption> mockAes,
+                out Mock<Services.ILogger> mockLogger,
                 []
             );
 
@@ -59,6 +53,7 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockOthers,
                 out Mock<IAssymmetricEncryption> mockRsa,
                 out Mock<ISymmetricEncryption> mockAes,
+                out Mock<Services.ILogger> mockLogger,
                 []
             );
 
@@ -81,6 +76,7 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockOthers,
                 out Mock<IAssymmetricEncryption> mockRsa,
                 out Mock<ISymmetricEncryption> mockAes,
+                out Mock<Services.ILogger> mockLogger,
                 [new("testUser", "testValue")]
             );
 
@@ -105,6 +101,7 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockOthers,
                 out Mock<IAssymmetricEncryption> mockRsa,
                 out Mock<ISymmetricEncryption> mockAes,
+                out Mock<Services.ILogger> mockLogger,
                 [new("testUser", "testValue")]
             );
 
@@ -130,6 +127,7 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockOthers,
                 out Mock<IAssymmetricEncryption> mockRsa,
                 out Mock<ISymmetricEncryption> mockAes,
+                out Mock<Services.ILogger> mockLogger,
                 [new("testUser", "testValue")]
             );
 
@@ -142,8 +140,33 @@ namespace Socrates.Tests
             mockOthers.Verify(others => others.UserJoinsChat(It.IsAny<string>()), Times.Once);
         }
 
+        [Fact]
+        public async void OnDisconnectedAsync_ShouldLogError_WhenExceptionOccurs()
+        {
+            // Arrange
+            ArrangeInitialData(
+                out Mock<IDatabase> mockRedisDb,
+                out ChatHub hub,
+                out Mock<IChatHub> mockCaller,
+                out Mock<IChatHub> mockClient,
+                out Mock<IChatHub> mockOthers,
+                out Mock<IAssymmetricEncryption> mockRsa,
+                out Mock<ISymmetricEncryption> mockAes,
+                out Mock<Services.ILogger> mockLogger,
+                []
+            );
 
-        private void ArrangeInitialData(
+            var exception = new Exception("testException");
+
+            // Act
+            await hub.OnDisconnectedAsync(exception);
+
+            // Assert
+            mockLogger.Verify(logger => logger.LogError(exception, "Exception occured!"));
+        }
+
+
+        private static void ArrangeInitialData(
             out Mock<IDatabase> mockRedisDb,
             out ChatHub hub,
             out Mock<IChatHub> mockCaller,
@@ -151,17 +174,19 @@ namespace Socrates.Tests
             out Mock<IChatHub> mockOthers,
             out Mock<IAssymmetricEncryption> mockRsa,
             out Mock<ISymmetricEncryption> mockAes,
+            out Mock<Services.ILogger> mockLogger,
             HashEntry[] hashEntries
         )
         {
             mockRsa = new();
             mockAes = new();
+            mockLogger = new();
             Mock<IConnectionMultiplexer> redis = new();
             mockRedisDb = MockRedisDatabase(redis, hashEntries);
             Mock<HubCallerContext> mockContext = MockContext(_username);
             MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out mockCaller, out mockClient, out mockOthers);
 
-            hub = new ChatHub(_logger.Object, redis.Object, mockRsa.Object, mockAes.Object)
+            hub = new ChatHub(mockLogger.Object, redis.Object, mockRsa.Object, mockAes.Object)
             {
                 Context = mockContext.Object,
                 Clients = mockClients.Object

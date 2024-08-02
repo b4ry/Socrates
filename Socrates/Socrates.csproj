@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Socrates.Constants\Socrates.Constants.csproj" />
     <ProjectReference Include="..\Socrates.Encryption\Socrates.Encryption.csproj" />
+    <ProjectReference Include="..\Socrates.Services\Socrates.Services.csproj" />
   </ItemGroup>
 
 </Project>
