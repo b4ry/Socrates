@@ -51,5 +51,15 @@ namespace Socrates.Tests.ChatHub
             // Assert
             _mockLogger.Verify(logger => logger.LogError(exception, "Exception occured!"));
         }
+
+        [Fact]
+        public async Task OnDisconnectedAsync_ShouldLogError_WhenNoContext()
+        {
+            // Act
+            await _hub.OnDisconnectedAsync(null);
+
+            // Assert
+            _mockLogger.Verify(logger => logger.LogError("User without an identity name!"));
+        }
     }
 }

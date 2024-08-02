@@ -61,7 +61,7 @@ namespace Socrates.Hubs
                 return;
             }
 
-            var disconnectingUsername = Context.User?.Identity?.Name;
+            var disconnectingUsername = Context?.User?.Identity?.Name;
 
             if (disconnectingUsername != null)
             {
