@@ -10,6 +10,8 @@ namespace Socrates.Tests.ChatHub
     public class ChatHubUsersTests
     {
         private const string _username = "testUsername";
+        private const string _otherUsername = "testUser";
+        private const string _encryptedMessage = "encryptedString";
 
         private readonly Hubs.ChatHub _hub;
 
@@ -28,7 +30,7 @@ namespace Socrates.Tests.ChatHub
             _mockLogger = new();
 
             Mock<IConnectionMultiplexer> redis = new();
-            TestHelper.MockRedisDatabase(redis, [new("testUser", "testValue")]);
+            TestHelper.MockRedisDatabase(redis, [new(_otherUsername, "testValue")]);
 
             Mock<HubCallerContext> mockContext = TestHelper.MockContext(_username);
 
@@ -42,10 +44,10 @@ namespace Socrates.Tests.ChatHub
         }
 
         [Fact]
-        public async Task OnConnectedAsync_ShouldSendUsersToCaller_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
+        public async Task OnConnectedAsync_ShouldSendUsersToCaller_WhenContextHasCorrectIdentityWithUsername()
         {
             // Arrange
-            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult("encryptedString"));
+            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(_encryptedMessage));
 
             // Act
             await _hub.OnConnectedAsync();
@@ -55,30 +57,57 @@ namespace Socrates.Tests.ChatHub
         }
 
         [Fact]
-        public async Task OnConnectedAsync_ShouldSendEncryptedWithClientKeyMessageToClient_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
+        public async Task OnConnectedAsync_ShouldSendEncryptedMessageWithClientKeyToClient_WhenContextHasCorrectIdentityWithUsername()
         {
             // Arrange
-            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult("encryptedString"));
+            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(_encryptedMessage));
 
             // Act
             await _hub.OnConnectedAsync();
 
             // Assert
-            _mockAes.Verify(aes => aes.EncryptMessage(It.IsAny<string>(), "testUser"), Times.Once);
-            _mockClient.Verify(client => client.ReceiveMessage(MessageSourceNames.Server, "encryptedString"), Times.Once);
+            _mockAes.Verify(aes => aes.EncryptMessage(It.IsAny<string>(), _otherUsername), Times.Once);
+            _mockClient.Verify(client => client.ReceiveMessage(MessageSourceNames.Server, _encryptedMessage), Times.Once);
         }
 
         [Fact]
-        public async Task OnConnectedAsync_ShouldNotifyOthersThatUserJoinsChat_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
+        public async Task OnConnectedAsync_ShouldNotifyOthersThatUserJoinsChat_WhenContextHasCorrectIdentityWithUsername()
         {
             // Arrange
-            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult("encryptedString"));
+            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(_encryptedMessage));
 
             // Act
             await _hub.OnConnectedAsync();
 
             // Assert
             _mockOthers.Verify(others => others.UserJoinsChat(It.IsAny<string>()), Times.Once);
+        }
+
+        [Fact]
+        public async Task OnDisconnectedAsync_ShouldSendEncryptedMessageWithClientKeyToClient_WhenContextHasCorrectIdentityWithUsername()
+        {
+            // Arrange
+            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(_encryptedMessage));
+
+            // Act
+            await _hub.OnDisconnectedAsync(null);
+
+            // Assert
+            _mockAes.Verify(aes => aes.EncryptMessage(It.IsAny<string>(), _otherUsername), Times.Once);
+            _mockClient.Verify(client => client.ReceiveMessage(MessageSourceNames.Server, _encryptedMessage), Times.Once);
+        }
+
+        [Fact]
+        public async Task OnDisconnectedAsync_ShouldNotSendEncryptedMessageToDisconnectingClient_WhenContextHasCorrectIdentityWithUsername()
+        {
+            // Arrange
+            _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(_encryptedMessage));
+
+            // Act
+            await _hub.OnDisconnectedAsync(null);
+
+            // Assert
+            _mockAes.Verify(aes => aes.EncryptMessage(It.IsAny<string>(), _username), Times.Never);
         }
     }
 }

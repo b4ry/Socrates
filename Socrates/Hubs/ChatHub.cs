@@ -36,7 +36,7 @@ namespace Socrates.Hubs
 
                     foreach (var user in users)
                     {
-                        await EncryptMessageWithUserKeyAndSendIt(username, user);
+                        await EncryptMessageWithUserKeyAndSendIt(user, $"{username} joined the chat!");
                     }
 
                     await Clients.Others.UserJoinsChat(username);
@@ -65,16 +65,13 @@ namespace Socrates.Hubs
 
             if (disconnectingUsername != null)
             {
-                var usernames = (await _redisDb.HashGetAllAsync(Redis.ConnectedUsersKey))
+                var users = (await _redisDb.HashGetAllAsync(Redis.ConnectedUsersKey))
                     .Where(x => x.Name != disconnectingUsername)
-                    .Select(x => x.Name)
                     .ToList();
 
-                foreach (var username in usernames)
+                foreach (var user in users)
                 {
-                    var encryptedMessage = await _aes.EncryptMessage($"{disconnectingUsername} left the chat!", username!);
-
-                    await Clients.User(username!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
+                    await EncryptMessageWithUserKeyAndSendIt(user, $"{disconnectingUsername} left the chat!");
                 }
 
                 await _redisDb.HashDeleteAsync(Redis.ConnectedUsersKey, disconnectingUsername);
@@ -128,9 +125,9 @@ namespace Socrates.Hubs
             }
         }
 
-        private async Task EncryptMessageWithUserKeyAndSendIt(string username, HashEntry user)
+        private async Task EncryptMessageWithUserKeyAndSendIt(HashEntry user, string message)
         {
-            var encryptedMessage = await _aes.EncryptMessage($"{username} joined the chat!", user.Name!);
+            var encryptedMessage = await _aes.EncryptMessage(message, user.Name!);
 
             await Clients.Client(user.Value!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
         }
