@@ -8,7 +8,7 @@ namespace Socrates.Tests
 {
     public class RSAEncryptionTests
     {
-        private readonly IRSAEncryption _rsa;
+        private readonly IAssymmetricEncryption _rsa;
 
         public RSAEncryptionTests()
         {

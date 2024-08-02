@@ -3,7 +3,7 @@ using Socrates.Encryption.Interfaces;
 
 namespace Socrates.Encryption
 {
-    public class RSAEncryption : IRSAEncryption
+    public class RSAEncryption : IAssymmetricEncryption
     {
         private readonly RSA _rsa = RSA.Create();
 

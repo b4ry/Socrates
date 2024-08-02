@@ -11,10 +11,10 @@ namespace Socrates.Hubs
     {
         private readonly ILogger<ChatHub> _logger;
         private readonly IDatabase _redisDb;
-        private readonly IRSAEncryption _rsa;
-        private readonly IAESEncryption _aes;
+        private readonly IAssymmetricEncryption _rsa;
+        private readonly ISymmetricEncryption _aes;
 
-        public ChatHub(ILogger<ChatHub> logger, IConnectionMultiplexer redis, IRSAEncryption rsa, IAESEncryption aes)
+        public ChatHub(ILogger<ChatHub> logger, IConnectionMultiplexer redis, IAssymmetricEncryption rsa, ISymmetricEncryption aes)
         {
             _redisDb = redis.GetDatabase();
             _logger = logger;

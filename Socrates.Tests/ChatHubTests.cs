@@ -29,8 +29,8 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockCaller,
                 out Mock<IChatHub> mockClient,
                 out Mock<IChatHub> mockOthers,
-                out Mock<IRSAEncryption> mockRsa,
-                out Mock<IAESEncryption> mockAes,
+                out Mock<IAssymmetricEncryption> mockRsa,
+                out Mock<ISymmetricEncryption> mockAes,
                 []
             );
 
@@ -57,8 +57,8 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockCaller,
                 out Mock<IChatHub> mockClient,
                 out Mock<IChatHub> mockOthers,
-                out Mock<IRSAEncryption> mockRsa,
-                out Mock<IAESEncryption> mockAes,
+                out Mock<IAssymmetricEncryption> mockRsa,
+                out Mock<ISymmetricEncryption> mockAes,
                 []
             );
 
@@ -79,8 +79,8 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockCaller,
                 out Mock<IChatHub> mockClient,
                 out Mock<IChatHub> mockOthers,
-                out Mock<IRSAEncryption> mockRsa,
-                out Mock<IAESEncryption> mockAes,
+                out Mock<IAssymmetricEncryption> mockRsa,
+                out Mock<ISymmetricEncryption> mockAes,
                 [new("testUser", "testValue")]
             );
 
@@ -103,8 +103,8 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockCaller,
                 out Mock<IChatHub> mockClient,
                 out Mock<IChatHub> mockOthers,
-                out Mock<IRSAEncryption> mockRsa,
-                out Mock<IAESEncryption> mockAes,
+                out Mock<IAssymmetricEncryption> mockRsa,
+                out Mock<ISymmetricEncryption> mockAes,
                 [new("testUser", "testValue")]
             );
 
@@ -128,8 +128,8 @@ namespace Socrates.Tests
                 out Mock<IChatHub> mockCaller,
                 out Mock<IChatHub> mockClient,
                 out Mock<IChatHub> mockOthers,
-                out Mock<IRSAEncryption> mockRsa,
-                out Mock<IAESEncryption> mockAes,
+                out Mock<IAssymmetricEncryption> mockRsa,
+                out Mock<ISymmetricEncryption> mockAes,
                 [new("testUser", "testValue")]
             );
 
@@ -149,8 +149,8 @@ namespace Socrates.Tests
             out Mock<IChatHub> mockCaller,
             out Mock<IChatHub> mockClient,
             out Mock<IChatHub> mockOthers,
-            out Mock<IRSAEncryption> mockRsa,
-            out Mock<IAESEncryption> mockAes,
+            out Mock<IAssymmetricEncryption> mockRsa,
+            out Mock<ISymmetricEncryption> mockAes,
             HashEntry[] hashEntries
         )
         {

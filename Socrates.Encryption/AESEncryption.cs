@@ -6,14 +6,14 @@ using System.Text;
 
 namespace Socrates.Encryption
 {
-    public class AESEncryption : IAESEncryption
+    public class AESEncryption : ISymmetricEncryption
     {
         private readonly IConnectionMultiplexer _redis;
         private readonly IDatabase _redisDb;
-        private readonly IRSAEncryption _rsa;
+        private readonly IAssymmetricEncryption _rsa;
         private readonly Aes _aes;
 
-        public AESEncryption(IRSAEncryption rsa, IConnectionMultiplexer redis)
+        public AESEncryption(IAssymmetricEncryption rsa, IConnectionMultiplexer redis)
         {
             _redis = redis;
             _redisDb = redis.GetDatabase();
