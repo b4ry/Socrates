@@ -5,13 +5,13 @@ using Socrates.Encryption.Interfaces;
 using Socrates.Hubs;
 using StackExchange.Redis;
 
-namespace Socrates.Tests
+namespace Socrates.Tests.ChatHub
 {
     public class ChatHubNoUsersTests
     {
         private const string _username = "testUsername";
 
-        private readonly ChatHub _hub;
+        private readonly Hubs.ChatHub _hub;
 
         private readonly Mock<IDatabase> _mockRedisDb;
         private readonly Mock<IChatHub> _mockCaller;
@@ -33,7 +33,7 @@ namespace Socrates.Tests
 
             TestHelper.MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out _mockCaller);
 
-            _hub = new ChatHub(_mockLogger.Object, redis.Object, _mockRsa.Object, _mockAes.Object)
+            _hub = new Hubs.ChatHub(_mockLogger.Object, redis.Object, _mockRsa.Object, _mockAes.Object)
             {
                 Context = mockContext.Object,
                 Clients = mockClients.Object
@@ -41,7 +41,7 @@ namespace Socrates.Tests
         }
 
         [Fact]
-        public async void OnConnectedAsync_ShouldAddUserToConnectedUsersEntriesInRedisDatabase_WhenContextHasCorrectIdentityWithUsername()
+        public async Task OnConnectedAsync_ShouldAddUserToConnectedUsersEntriesInRedisDatabase_WhenContextHasCorrectIdentityWithUsername()
         {
             // Act
             await _hub.OnConnectedAsync();
@@ -57,27 +57,13 @@ namespace Socrates.Tests
         }
 
         [Fact]
-        public async void OnConnectedAsync_ShouldSendRSAPublicKeyToCaller_WhenContextHasCorrectIdentityWithUsername()
+        public async Task OnConnectedAsync_ShouldSendRSAPublicKeyToCaller_WhenContextHasCorrectIdentityWithUsername()
         {
             // Act
             await _hub.OnConnectedAsync();
 
             // Assert
             _mockCaller.Verify(caller => caller.GetAsymmetricPublicKey(It.IsAny<string>()), Times.Once);
-        }
-
-
-        [Fact]
-        public async void OnDisconnectedAsync_ShouldLogError_WhenExceptionOccurs()
-        {
-            // Arrange
-            var exception = new Exception("testException");
-
-            // Act
-            await _hub.OnDisconnectedAsync(exception);
-
-            // Assert
-            _mockLogger.Verify(logger => logger.LogError(exception, "Exception occured!"));
         }
     }
 }

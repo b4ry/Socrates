@@ -5,13 +5,13 @@ using Socrates.Encryption.Interfaces;
 using Socrates.Hubs;
 using StackExchange.Redis;
 
-namespace Socrates.Tests
+namespace Socrates.Tests.ChatHub
 {
     public class ChatHubUsersTests
     {
         private const string _username = "testUsername";
 
-        private readonly ChatHub _hub;
+        private readonly Hubs.ChatHub _hub;
 
         private readonly Mock<IChatHub> _mockCaller;
         private readonly Mock<IChatHub> _mockClient;
@@ -34,7 +34,7 @@ namespace Socrates.Tests
 
             TestHelper.MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients, out _mockCaller, out _mockClient, out _mockOthers);
 
-            _hub = new ChatHub(_mockLogger.Object, redis.Object, _mockRsa.Object, _mockAes.Object)
+            _hub = new Hubs.ChatHub(_mockLogger.Object, redis.Object, _mockRsa.Object, _mockAes.Object)
             {
                 Context = mockContext.Object,
                 Clients = mockClients.Object
@@ -42,7 +42,7 @@ namespace Socrates.Tests
         }
 
         [Fact]
-        public async void OnConnectedAsync_ShouldSendUsersToCaller_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
+        public async Task OnConnectedAsync_ShouldSendUsersToCaller_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
         {
             // Arrange
             _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult("encryptedString"));
@@ -55,7 +55,7 @@ namespace Socrates.Tests
         }
 
         [Fact]
-        public async void OnConnectedAsync_ShouldSendEncryptedWithClientKeyMessageToClient_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
+        public async Task OnConnectedAsync_ShouldSendEncryptedWithClientKeyMessageToClient_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
         {
             // Arrange
             _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult("encryptedString"));
@@ -69,7 +69,7 @@ namespace Socrates.Tests
         }
 
         [Fact]
-        public async void OnConnectedAsync_ShouldNotifyOthersThatUserJoinsChat_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
+        public async Task OnConnectedAsync_ShouldNotifyOthersThatUserJoinsChat_WhenContextHasCorrectIdentityWithUsernameAndThereAreOthersConnected()
         {
             // Arrange
             _mockAes.Setup(aes => aes.EncryptMessage(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult("encryptedString"));

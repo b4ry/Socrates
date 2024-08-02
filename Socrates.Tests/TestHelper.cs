@@ -34,6 +34,11 @@ namespace Socrates.Tests
             mockClients.Setup(clients => clients.Caller).Returns(mockCaller.Object);
         }
 
+        public static void MockClients(out Mock<IHubCallerClients<IChatHub>> mockClients)
+        {
+            mockClients = new Mock<IHubCallerClients<IChatHub>>();
+        }
+
         public static Mock<IDatabase> MockRedisDatabase(Mock<IConnectionMultiplexer> redis, HashEntry[] dbRecords)
         {
             var mockDatabase = new Mock<IDatabase>();

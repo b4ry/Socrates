@@ -10,7 +10,7 @@ namespace Socrates.Tests
 {
     public class AESEncryptionTests
     {
-        private ISymmetricEncryption _aes;
+        private ISymmetricEncryption? _aes;
         private readonly Mock<IAssymmetricEncryption> _mockRsa;
         private readonly Mock<IConnectionMultiplexer> _mockRedis;
 
