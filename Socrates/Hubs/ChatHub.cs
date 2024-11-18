@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using Socrates.Constants;
 using Socrates.Encryption.Interfaces;
@@ -6,7 +7,7 @@ using StackExchange.Redis;
 
 namespace Socrates.Hubs
 {
-    [Authorize]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class ChatHub : Hub<IChatHub>
     {
         private readonly Services.ILogger _logger;
