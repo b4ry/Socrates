@@ -122,7 +122,14 @@ app.UseAuthorization();
 
 app.MapHub<ChatHub>(builder.Configuration.GetSection(ConfigurationPropertyNames.HubPattern).Get<string>()!);
 
-app.Run();
+try
+{
+    app.Run();
+}
+catch(Exception ex)
+{
+    Console.WriteLine(ex);
+}
 
 static void ExtractAccessToken(MessageReceivedContext context, WebApplicationBuilder builder, StringValues accessToken)
 {

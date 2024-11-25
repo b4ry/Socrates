@@ -27,8 +27,8 @@ namespace Socrates.Tests
             var message = "testMessage";
             var aes = Aes.Create();
 
-            var userKey = new RedisValue("testKey");
-            var userIV = new RedisValue("testIV");
+            var userKey = new RedisValue(Convert.ToBase64String(aes.Key));
+            var userIV = new RedisValue(Convert.ToBase64String(aes.IV));
 
             var _mockDatabase = new Mock<IDatabase>();
             _mockDatabase.Setup(
@@ -39,8 +39,8 @@ namespace Socrates.Tests
             ).Returns(Task.FromResult(userIV));
             _mockRedis.Setup(redis => redis.GetDatabase(It.IsAny<int>(), It.IsAny<object>())).Returns(_mockDatabase.Object);
 
-            _mockRsa.Setup(x => x.Decrypt(userKey!)).Returns(aes.Key);
-            _mockRsa.Setup(x => x.Decrypt(userIV!)).Returns(aes.IV);
+            _mockRsa.Setup(x => x.Decrypt(It.IsAny<byte[]>())).Returns(aes.Key);
+            _mockRsa.Setup(x => x.Decrypt(It.IsAny<byte[]>())).Returns(aes.IV);
 
             _aes = new AESEncryption(_mockRsa.Object, _mockRedis.Object);
 

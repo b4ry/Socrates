@@ -25,8 +25,8 @@ namespace Socrates.Encryption
         {
             byte[] textBytes = Encoding.UTF8.GetBytes(message);
 
-            var encryptedUserPublicKey = await _redisDb.HashGetAsync(Redis.UserPublicKeysKey, user);
-            var encryptedUserPublicIV = await _redisDb.HashGetAsync(Redis.UserPublicIVsKey, user);
+            var encryptedUserPublicKey = Convert.FromBase64String((await _redisDb.HashGetAsync(Redis.UserPublicKeysKey, user))!);
+            var encryptedUserPublicIV = Convert.FromBase64String((await _redisDb.HashGetAsync(Redis.UserPublicIVsKey, user))!);
             var decryptedSymmetricKey = _rsa.Decrypt(encryptedUserPublicKey!);
             var decryptedSymmetricIV = _rsa.Decrypt(encryptedUserPublicIV!);
 

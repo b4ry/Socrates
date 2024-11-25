@@ -115,7 +115,7 @@ namespace Socrates.Hubs
             }
         }
 
-        public async void StoreSymmetricKey((byte[] encryptedSymmetricKey, byte[] encryptedSymmetricIV) encryptedSymmetricKeyInfo)
+        public async void StoreSymmetricKey((string encryptedSymmetricKey, string encryptedSymmetricIV) encryptedSymmetricKeyInfo)
         {
             var userName = Context.User?.Identity?.Name;
 
