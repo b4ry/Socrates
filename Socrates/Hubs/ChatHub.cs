@@ -84,34 +84,32 @@ namespace Socrates.Hubs
             else
             {
                 _logger.LogError("User without an identity name!");
-                // TODO: logs it out
+                // TODO: logs the user out
             }
         }
 
-        public async Task SendMessage(string user, string message)
+        public async Task SendMessage(string targetUser, string message)
         {
             var sourceUsername = Context?.User?.Identity?.Name ?? MessageSourceNames.Unknown;
-            var newMessage = $"{sourceUsername}: {message}";
+            var decryptedMessage = await _aes.DecryptMessage(message, sourceUsername);
+            var newMessage = $"{decryptedMessage}";
 
-            if (user == MessageSourceNames.Server)
+            if (targetUser == MessageSourceNames.Server)
             {
-                var usernames = (await _redisDb.HashGetAllAsync(Redis.ConnectedUsersKey))
+                var users = (await _redisDb.HashGetAllAsync(Redis.ConnectedUsersKey))
                     .Where(x => x.Name != sourceUsername)
-                    .Select(x => x.Name)
                     .ToList();
 
-                foreach (var username in usernames)
+                foreach (var user in users)
                 {
-                    var encryptedMessage = await _aes.EncryptMessage(newMessage, username!);
-
-                    await Clients.User(username!).ReceiveMessage(MessageSourceNames.Server, encryptedMessage);
+                    await EncryptMessageWithUserKeyAndSendIt(user, decryptedMessage);
                 }
             }
             else
             {
-                var encryptedMessage = await _aes.EncryptMessage(newMessage, user);
+                var encryptedMessage = await _aes.EncryptMessage(newMessage, targetUser);
 
-                await Clients.User(user).ReceiveMessage(sourceUsername, encryptedMessage);
+                await Clients.User(targetUser).ReceiveMessage(sourceUsername, encryptedMessage);
             }
         }
 

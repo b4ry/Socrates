@@ -25,13 +25,7 @@ namespace Socrates.Encryption
         {
             byte[] textBytes = Encoding.UTF8.GetBytes(message);
 
-            var encryptedUserPublicKey = Convert.FromBase64String((await _redisDb.HashGetAsync(Redis.UserPublicKeysKey, user))!);
-            var encryptedUserPublicIV = Convert.FromBase64String((await _redisDb.HashGetAsync(Redis.UserPublicIVsKey, user))!);
-            var decryptedSymmetricKey = _rsa.Decrypt(encryptedUserPublicKey!);
-            var decryptedSymmetricIV = _rsa.Decrypt(encryptedUserPublicIV!);
-
-            _aes.Key = decryptedSymmetricKey;
-            _aes.IV = decryptedSymmetricIV;
+            await SetUsersAes(user);
 
             var aesEncryptor = _aes.CreateEncryptor();
 
@@ -42,6 +36,34 @@ namespace Socrates.Encryption
             }
 
             return Convert.ToBase64String(ms.ToArray());
+        }
+
+        public async Task<string> DecryptMessage(string encryptedText, string user)
+        {
+            byte[] encryptedBytes = Convert.FromBase64String(encryptedText);
+            
+            await SetUsersAes(user);
+
+            var _aesDecryptor = _aes.CreateDecryptor();
+
+            using MemoryStream ms = new();
+            using (CryptoStream cs = new(ms, _aesDecryptor, CryptoStreamMode.Write))
+            {
+                await cs.WriteAsync(encryptedBytes);
+            }
+
+            return Encoding.UTF8.GetString(ms.ToArray());
+        }
+
+        private async Task SetUsersAes(string user)
+        {
+            var encryptedUserPublicKey = Convert.FromBase64String((await _redisDb.HashGetAsync(Redis.UserPublicKeysKey, user))!);
+            var encryptedUserPublicIV = Convert.FromBase64String((await _redisDb.HashGetAsync(Redis.UserPublicIVsKey, user))!);
+            var decryptedSymmetricKey = _rsa.Decrypt(encryptedUserPublicKey!);
+            var decryptedSymmetricIV = _rsa.Decrypt(encryptedUserPublicIV!);
+
+            _aes.Key = decryptedSymmetricKey;
+            _aes.IV = decryptedSymmetricIV;
         }
     }
 }
